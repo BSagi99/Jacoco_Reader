@@ -1,0 +1,1 @@
+To run, soda-java and jacoco-listener (mvn clean install) are needed
