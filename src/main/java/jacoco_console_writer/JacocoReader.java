@@ -8,14 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.jacoco.core.analysis.Analyzer;
-import org.jacoco.core.analysis.CoverageBuilder;
-import org.jacoco.core.analysis.IBundleCoverage;
-import org.jacoco.core.analysis.IClassCoverage;
-import org.jacoco.core.analysis.ICounter;
-import org.jacoco.core.analysis.IMethodCoverage;
-import org.jacoco.core.analysis.IPackageCoverage;
-import org.jacoco.core.analysis.ISourceFileCoverage;
+import org.jacoco.core.analysis.*;
 import org.jacoco.core.data.ExecutionDataReader;
 import org.jacoco.core.data.ExecutionDataStore;
 import org.jacoco.core.data.IncompatibleExecDataVersionException;
@@ -32,6 +25,7 @@ public class JacocoReader {
 	
 	private static final String PATH_SEPARATOR = ".";
 	private static final String LINE_INFO_SEPARATOR = "-";
+	private static final String METHOD_LINE_SEPARATOR = ":";
 	private static final CoverageMatrix COVERAGE_MATRIX = new CoverageMatrix();
 	private static final ResultsMatrix RESULTS_MATRIX = new ResultsMatrix();
 
@@ -145,7 +139,7 @@ public class JacocoReader {
 					coverageList.add(classCoverage.getName());
 				}
 			} else {
-				methodReport(coverageList, classCoverage);
+				methodReportWithLines(coverageList, classCoverage);
 			}
 		}
 	}
@@ -154,10 +148,23 @@ public class JacocoReader {
 		return classCoverage.getClassCounter().getStatus() == ICounter.FULLY_COVERED || classCoverage.getClassCounter().getStatus() == ICounter.PARTLY_COVERED;
 	}
 	
-	private void methodReport(final List<String> coverageList, final IClassCoverage classCoverage) {
+	private void methodReportWithLines(final List<String> coverageList, final IClassCoverage classCoverage) {
 		for(IMethodCoverage methodCoverage : classCoverage.getMethods()) {
 			if(isMethodCovered(methodCoverage)) {
-				coverageList.add(String.format("%s%s%s%s", classCoverage.getName(), PATH_SEPARATOR, methodCoverage.getName(), methodCoverage.getDesc()));
+				for(int actualLine = methodCoverage.getFirstLine(); actualLine <= methodCoverage.getLastLine(); actualLine++) {
+					ILine line = methodCoverage.getLine(actualLine);
+					if(isLineCovered(line)) {
+						coverageList.add(String.format("%s%s%s%s%s%s%s%s",
+								classCoverage.getName(),
+								PATH_SEPARATOR,
+								methodCoverage.getName(),
+								methodCoverage.getDesc(),
+								METHOD_LINE_SEPARATOR,
+								line,
+								LINE_INFO_SEPARATOR,
+								actualLine));
+					}
+				}
 			}
 		}
 	}
@@ -165,18 +172,22 @@ public class JacocoReader {
 	private boolean isMethodCovered(final IMethodCoverage methodCoverage) {
 		return methodCoverage.getMethodCounter().getStatus() == ICounter.FULLY_COVERED || methodCoverage.getMethodCounter().getStatus() == ICounter.PARTLY_COVERED;
 	}
+
+	private boolean isLineCovered(final ILine lineCoverage) {
+		return lineCoverage.getStatus() == ICounter.FULLY_COVERED || lineCoverage.getStatus() == ICounter.PARTLY_COVERED;
+	}
 	
 	private void sourcefileReport(final List<String> coverageList, final IPackageCoverage packageCoverage) {
 		for (ISourceFileCoverage sourcefileCoverage : packageCoverage.getSourceFiles()) {
 			for(int line = 1; line <= sourcefileCoverage.getLastLine(); line++) {
-				if(isLineCovered(sourcefileCoverage, line)) {
+				if(isSourcefileLineCovered(sourcefileCoverage, line)) {
 					coverageList.add(String.format("%s%s%s%s%s", sourcefileCoverage.getPackageName(), PATH_SEPARATOR, sourcefileCoverage.getName(), LINE_INFO_SEPARATOR, line));
 				}
 			}
 		}
 	}
 
-	private boolean isLineCovered(final ISourceFileCoverage sourcefileCoverage, final int line) {
+	private boolean isSourcefileLineCovered(final ISourceFileCoverage sourcefileCoverage, final int line) {
 		return sourcefileCoverage.getLine(line).getStatus() == ICounter.FULLY_COVERED || sourcefileCoverage.getLine(line).getStatus() == ICounter.PARTLY_COVERED;
 	}
 
