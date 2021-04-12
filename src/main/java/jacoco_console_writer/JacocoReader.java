@@ -25,7 +25,7 @@ public class JacocoReader {
 	
 	private static final String PATH_SEPARATOR = ".";
 	private static final String LINE_INFO_SEPARATOR = "-";
-	private static final String METHOD_LINE_SEPARATOR = ";";
+	private static final String METHOD_LINE_SEPARATOR = "~";
 	private static final CoverageMatrix COVERAGE_MATRIX = new CoverageMatrix();
 	private static final ResultsMatrix RESULTS_MATRIX = new ResultsMatrix();
 
@@ -160,7 +160,7 @@ public class JacocoReader {
 								methodCoverage.getName(),
 								methodCoverage.getDesc(),
 								METHOD_LINE_SEPARATOR,
-								line,
+								line.getClass().getName(),
 								LINE_INFO_SEPARATOR,
 								actualLine));
 					}
