@@ -20,13 +20,14 @@ import hu.sed.soda.data.ResultsMatrix;
 import hu.sed.soda.data.ResultsMatrix.TestResultType;
 
 public class JacocoReader {
-	
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(JacocoReader.class);
 	
 	private static final String PATH_SEPARATOR = ".";
 	private static final String LINE_INFO_SEPARATOR = "-";
 	private static final CoverageMatrix COVERAGE_MATRIX = new CoverageMatrix();
 	private static final ResultsMatrix RESULTS_MATRIX = new ResultsMatrix();
+	private static final int RESULT_LENGTH = 5;
 
 	private final File executionDataFile;
 	private final File classesDirectory;
@@ -90,7 +91,7 @@ public class JacocoReader {
 	}
 
 	private String getTestCaseNameWithoutResult(final String key) {
-		return key.substring(0, key.length() - 5);
+		return key.substring(0, key.length() - RESULT_LENGTH);
 	}
 
 	private void addTestCaseNameToMatrices(final String testCaseName) {
@@ -117,7 +118,7 @@ public class JacocoReader {
 		for (IPackageCoverage packageCoverage : bundleCoverage.getPackages()) {
 			if(coverageType.equals(Granularity.PACKAGE)) {
 				if(isPackageCovered(packageCoverage)) {
-					coverageList.add(packageCoverage.getName());
+					coverageList.add(replaceSlashesWithPoints(packageCoverage.getName()));
 				}
 			} else if (coverageType.equals(Granularity.CLASS) || coverageType.equals(Granularity.METHOD) || coverageType.equals(Granularity.LINE)) {
 				classReport(coverageList, packageCoverage);
@@ -136,7 +137,7 @@ public class JacocoReader {
 		for(IClassCoverage classCoverage : packageCoverage.getClasses()) {
 			if(coverageType.equals(Granularity.CLASS)) {
 				if(isClassCovered(classCoverage)) {
-					coverageList.add(classCoverage.getName());
+					coverageList.add(replaceSlashesWithPoints(classCoverage.getName()));
 				}
 			} else {
 				methodReportWithLines(coverageList, classCoverage);
@@ -153,7 +154,7 @@ public class JacocoReader {
 			if(isMethodCovered(methodCoverage)) {
 			    if(coverageType.equals(Granularity.METHOD)) {
                     coverageList.add(String.format("%s%s%s%s",
-                            classCoverage.getName(),
+                    		replaceSlashesWithPoints(classCoverage.getName()),
                             PATH_SEPARATOR,
                             methodCoverage.getName(),
                             methodCoverage.getDesc()));
@@ -161,7 +162,7 @@ public class JacocoReader {
                     for(int actualLine = methodCoverage.getFirstLine(); actualLine <= methodCoverage.getLastLine(); actualLine++) {
                         if(isLineCovered(methodCoverage.getLine(actualLine))) {
                             coverageList.add(String.format("%s%s%s%s%s%s",
-                                    classCoverage.getName(),
+                            		replaceSlashesWithPoints(classCoverage.getName()),
                                     PATH_SEPARATOR,
                                     methodCoverage.getName(),
                                     methodCoverage.getDesc(),
@@ -172,6 +173,10 @@ public class JacocoReader {
                 }
 			}
 		}
+	}
+	
+	private String replaceSlashesWithPoints(String coverageName) {
+		return coverageName.replace("/", ".").replace("\\", ".");
 	}
 
 	private boolean isMethodCovered(final IMethodCoverage methodCoverage) {
@@ -186,7 +191,7 @@ public class JacocoReader {
 		for (ISourceFileCoverage sourcefileCoverage : packageCoverage.getSourceFiles()) {
 			for(int line = 1; line <= sourcefileCoverage.getLastLine(); line++) {
 				if(isSourcefileLineCovered(sourcefileCoverage, line)) {
-					coverageList.add(String.format("%s%s%s%s%s", sourcefileCoverage.getPackageName(), PATH_SEPARATOR, sourcefileCoverage.getName(), LINE_INFO_SEPARATOR, line));
+					coverageList.add(String.format("%s%s%s%s%s", replaceSlashesWithPoints(sourcefileCoverage.getPackageName()), PATH_SEPARATOR, sourcefileCoverage.getName(), LINE_INFO_SEPARATOR, line));
 				}
 			}
 		}
