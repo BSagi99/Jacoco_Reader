@@ -24,7 +24,7 @@ public class JacocoReader {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JacocoReader.class);
 	
 	private static final String PATH_SEPARATOR = ".";
-	private static final String LINE_INFO_SEPARATOR = "-";
+	private static final String LINE_INFO_SEPARATOR = "###";
 	private static final CoverageMatrix COVERAGE_MATRIX = new CoverageMatrix();
 	private static final ResultsMatrix RESULTS_MATRIX = new ResultsMatrix();
 	private static final int RESULT_LENGTH = 5;
